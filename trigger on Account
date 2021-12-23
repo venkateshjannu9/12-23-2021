@@ -1,0 +1,14 @@
+trigger AccountOpty on Account (before insert) {
+	List<Opportunity> OpportunityList = new List<Opportunity>();
+    Map<Id, Opportunity> opptyMap = new Map<Id, Opportunity>([select id, stageName, AccountId, createdDate from Opportunity where AccountId IN: trigger.newMap().keyset()]);
+    DateTime Opportunity30Days = system.now()-30;
+    for(Opportunity opp: opptyMap.values()){
+        if(opp.createdDate < Opportunity30Days && opp.stageName != 'close won'){
+            opp.stageName = 'close lost';
+            opp.closeDate = system.today();
+            OpportunityList.add(opp);
+        }
+    }
+    if(OpportunityList != null && OpportunityList.size()>0)
+        insert OpportunityList;
+}
